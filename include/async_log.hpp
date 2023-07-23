@@ -92,7 +92,7 @@ class AsyncLog {
         });
 
         if (_stop.load(std::memory_order_acq_rel)) {
-          return;
+          break;
         }
 
         std::unique_ptr<LogTaskBase> log_task = std::move(_log_tasks.front());
@@ -101,6 +101,7 @@ class AsyncLog {
 
         log_task->ProcessLogTask();
       }
+      std::cout << "exit log work thread..." << std::endl;
     });
   }
 
