@@ -27,8 +27,11 @@ template <typename... Args>
 class LogTask : public LogTaskBase {
  public:
   template <typename... TArgs>
-  LogTask(LogLv level, std::string format_data, TArgs&&... log_data)
+  LogTask(LogLv level, const char* file, int line, std::string format_data,
+          TArgs&&... log_data)
       : _level(level),
+        _file_name(file),
+        _line(line),
         _format_data(format_data),
         _log_data(std::forward<TArgs>(log_data)...) {}
 
@@ -41,12 +44,19 @@ class LogTask : public LogTaskBase {
         },
         _log_data);
 
-    std::cout << log_msg << std::endl;
+    size_t lastSlash = _file_name.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+      _file_name = _file_name.substr(lastSlash + 1);
+    }
+    std::cout << "[" << _file_name << ":" << _line << "] " << log_msg
+              << std::endl;
   }
 
  private:
   LogLv _level;
   std::string _format_data;
+  std::string _file_name;
+  int _line;
   std::tuple<Args...> _log_data;
 };
 
@@ -68,9 +78,10 @@ class AsyncLog {
   }
 
   template <typename... Args>
-  void AsyncWrite(LogLv level, const std::string& format_data, Args&&... args) {
+  void AsyncWrite(LogLv level, const char* file, int line,
+                  const std::string& format_data, Args&&... args) {
     std::unique_ptr<LogTaskBase> task = std::make_unique<LogTask<Args...>>(
-        level, format_data, std::forward<Args>(args)...);
+        level, file, line, format_data, std::forward<Args>(args)...);
     bool notify = false;
     {
       std::unique_lock<std::mutex> lock(_log_task_mtx);
