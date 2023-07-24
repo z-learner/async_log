@@ -139,7 +139,7 @@ class AsyncLog {
   void SetLevel(LogLv level) { _level_limit = level; }
 
  private:
-  AsyncLog() : _stop(false), _work_thread{nullptr}, _level_limit(LogLv::DEBUG) {
+  AsyncLog() : _stop(false), _work_thread{nullptr}, _level_limit(LogLv::INFO) {
     _work_thread = std::make_unique<std::thread>([this]() {
       for (;;) {
         std::unique_lock<std::mutex> lock(_log_task_mtx);
