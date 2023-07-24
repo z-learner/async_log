@@ -16,6 +16,26 @@
 
 #include "fmt/format.h"
 
+#define ASYNC_LOG_DEBUG(...)                                                  \
+  AsyncLog::AsyncLog::instance().AsyncWrite(AsyncLog::LogLv::DEBUG, __FILE__, \
+                                            __LINE__, __VA_ARGS__);
+
+#define ASYNC_LOG_INFO(...)                                                  \
+  AsyncLog::AsyncLog::instance().AsyncWrite(AsyncLog::LogLv::INFO, __FILE__, \
+                                            __LINE__, __VA_ARGS__);
+
+#define ASYNC_LOG_WARN(...)                                                  \
+  AsyncLog::AsyncLog::instance().AsyncWrite(AsyncLog::LogLv::WARN, __FILE__, \
+                                            __LINE__, __VA_ARGS__);
+
+#define ASYNC_LOG_ERROR(...)                                                  \
+  AsyncLog::AsyncLog::instance().AsyncWrite(AsyncLog::LogLv::ERROR, __FILE__, \
+                                            __LINE__, __VA_ARGS__);
+
+#define ASYNC_LOG_FATAL(...)                                                  \
+  AsyncLog::AsyncLog::instance().AsyncWrite(AsyncLog::LogLv::FATAL, __FILE__, \
+                                            __LINE__, __VA_ARGS__);
+
 namespace AsyncLog {
 
 static const char *const kRst = "\033[0m";
