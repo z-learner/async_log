@@ -6,6 +6,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
@@ -15,6 +16,9 @@
 #include <variant>
 
 #include "fmt/format.h"
+
+#define ASYNC_SET_FILE(file_name) \
+  AsyncLog::AsyncLog::instance().SetFile(file_name);
 
 #define ASYNC_LOG_DEBUG(...)                                                  \
   AsyncLog::AsyncLog::instance().AsyncWrite(AsyncLog::LogLv::DEBUG, __FILE__, \
@@ -158,6 +162,11 @@ class AsyncLog {
 
   void SetLevel(LogLv level) { _level_limit = level; }
 
+  void SetFile(std::string file_name) {
+    log_file_name = file_name;
+    file_handle = std::make_unique<std::fstream>(file_name, std::ios::out);
+  }
+
  private:
   AsyncLog() : _stop(false), _work_thread{nullptr}, _level_limit(LogLv::INFO) {
     _work_thread = std::make_unique<std::thread>([this]() {
@@ -182,9 +191,16 @@ class AsyncLog {
         std::string log_prifix;
         std::string log_info;
         log_task->GetString(log_prifix, log_info);
-        printf("[%s] %s %s %s %s %s\n",
-               FormatNanoTimestamp(log_task->_now).c_str(), level_colors[level],
-               log_prifix.c_str(), level_msgs[level], log_info.c_str(), kRst);
+
+        std::string fmt_string =
+            fmt::format("{} [{}] {} {} {} {}\n", level_colors[level],
+                        FormatNanoTimestamp(log_task->_now), log_prifix,
+                        level_msgs[level], log_info, kRst);
+
+        printf("%s", fmt_string.c_str());
+        if (file_handle) {
+          file_handle->write(fmt_string.c_str(), fmt_string.size());
+        }
       }
       std::cout << "exit log work thread..." << std::endl;
     });
@@ -216,6 +232,9 @@ class AsyncLog {
   std::mutex _log_task_mtx;
   std::condition_variable _empty_cond;
   LogLv _level_limit;
+
+  std::string log_file_name;
+  std::unique_ptr<std::fstream> file_handle{nullptr};
 };
 
 }  // namespace AsyncLog
